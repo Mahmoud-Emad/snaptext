@@ -135,34 +135,3 @@ make lint              # Run code linting
 make format            # Format code with black and isort
 make install-dev       # Install development dependencies
 ```
-
-## CI/CD Workflows
-
-SnapText includes comprehensive GitHub Actions workflows for continuous integration:
-
-### 🔄 **Automated Testing** (`.github/workflows/test.yml`)
-
-- **Multi-platform testing**: Ubuntu and macOS
-- **Multi-version support**: Python 3.11, 3.12, 3.13
-- **Comprehensive test suite**: Unit, integration, and performance tests
-- **Coverage reporting**: Automatic coverage reports with Codecov
-- **CLI and server integration testing**
-- **Security scanning**: Safety and Bandit checks
-
-### 🔍 **Code Quality** (`.github/workflows/lint.yml`)
-
-- **Code formatting**: Black and isort validation
-- **Linting**: Flake8 with custom rules
-- **Type checking**: MyPy static analysis
-- **Security scanning**: Automated security issue detection
-- **Documentation checks**: Docstring validation
-- **Complexity analysis**: Code complexity metrics
-- **Pre-commit hooks validation**
-
-### ⚡ **Pull Request CI** (`.github/workflows/ci.yml`)
-
-- **Smart change detection**: Only runs relevant checks
-- **Fast feedback**: Optimized for quick PR validation
-- **Integration testing**: End-to-end workflow validation
-- **Security validation**: Automated security checks
-- **Documentation validation**: README and markdown link checking
