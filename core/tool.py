@@ -1,10 +1,12 @@
-import pytesseract
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
-import cv2
-import numpy as np
 import logging
 
+import cv2
+import numpy as np
+import pytesseract
+from PIL import Image, ImageEnhance, ImageFilter
+
 logger = logging.getLogger(__name__)
+
 
 def preprocess_image(image):
     """
@@ -35,13 +37,14 @@ def preprocess_image(image):
     # Convert back to PIL Image
     return Image.fromarray(cleaned)
 
+
 def enhance_image_pil(image):
     """
     Enhance image using PIL operations.
     """
     # Convert to grayscale
-    if image.mode != 'L':
-        image = image.convert('L')
+    if image.mode != "L":
+        image = image.convert("L")
 
     # Enhance contrast
     enhancer = ImageEnhance.Contrast(image)
@@ -55,6 +58,7 @@ def enhance_image_pil(image):
     image = image.filter(ImageFilter.UnsharpMask(radius=1, percent=150, threshold=3))
 
     return image
+
 
 def extract_text(image_path: str) -> str:
     """
@@ -73,13 +77,19 @@ def extract_text(image_path: str) -> str:
         # Method 1: Original image with basic enhancement
         try:
             enhanced_img = enhance_image_pil(original_img.copy())
+            whitelist = (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+                " .,!?@#$%^&*()_+-=[]{}|;:,.<>?"
+            )
             text1 = pytesseract.image_to_string(
                 enhanced_img,
-                config='--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,!?@#$%^&*()_+-=[]{}|;:,.<>?'
+                config=f"--oem 3 --psm 6 -c tessedit_char_whitelist={whitelist}",
             ).strip()
             if text1:
                 results.append(("Enhanced PIL", text1))
-                logger.info(f"Method 1 (Enhanced PIL) extracted {len(text1)} characters")
+                logger.info(
+                    f"Method 1 (Enhanced PIL) extracted {len(text1)} characters"
+                )
         except Exception as e:
             logger.warning(f"Method 1 failed: {e}")
 
@@ -87,8 +97,7 @@ def extract_text(image_path: str) -> str:
         try:
             preprocessed_img = preprocess_image(original_img.copy())
             text2 = pytesseract.image_to_string(
-                preprocessed_img,
-                config='--oem 3 --psm 6'
+                preprocessed_img, config="--oem 3 --psm 6"
             ).strip()
             if text2:
                 results.append(("OpenCV Preprocessed", text2))
@@ -101,12 +110,13 @@ def extract_text(image_path: str) -> str:
             # Scale up the image for better OCR
             scale_factor = 2
             width, height = original_img.size
-            scaled_img = original_img.resize((width * scale_factor, height * scale_factor), Image.LANCZOS)
+            scaled_img = original_img.resize(
+                (width * scale_factor, height * scale_factor), Image.LANCZOS
+            )
             scaled_img = enhance_image_pil(scaled_img)
 
             text3 = pytesseract.image_to_string(
-                scaled_img,
-                config='--oem 3 --psm 6 --dpi 300'
+                scaled_img, config="--oem 3 --psm 6 --dpi 300"
             ).strip()
             if text3:
                 results.append(("Scaled", text3))
@@ -118,7 +128,7 @@ def extract_text(image_path: str) -> str:
         try:
             text4 = pytesseract.image_to_string(
                 enhance_image_pil(original_img.copy()),
-                config='--oem 3 --psm 8'  # Single word mode
+                config="--oem 3 --psm 8",  # Single word mode
             ).strip()
             if text4:
                 results.append(("PSM 8", text4))
@@ -144,6 +154,7 @@ def extract_text(image_path: str) -> str:
         logger.error(f"OCR processing failed: {e}")
         raise Exception(f"Failed to extract text: {str(e)}")
 
+
 def get_text_confidence(image_path: str) -> dict:
     """
     Get OCR confidence scores for debugging.
@@ -153,17 +164,19 @@ def get_text_confidence(image_path: str) -> dict:
         enhanced_img = enhance_image_pil(img)
 
         # Get detailed OCR data with confidence scores
-        data = pytesseract.image_to_data(enhanced_img, output_type=pytesseract.Output.DICT)
+        data = pytesseract.image_to_data(
+            enhanced_img, output_type=pytesseract.Output.DICT
+        )
 
         # Calculate average confidence
-        confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
+        confidences = [int(conf) for conf in data["conf"] if int(conf) > 0]
         avg_confidence = sum(confidences) / len(confidences) if confidences else 0
 
         return {
-            'average_confidence': avg_confidence,
-            'word_count': len([word for word in data['text'] if word.strip()]),
-            'low_confidence_words': len([conf for conf in confidences if conf < 80])
+            "average_confidence": avg_confidence,
+            "word_count": len([word for word in data["text"] if word.strip()]),
+            "low_confidence_words": len([conf for conf in confidences if conf < 80]),
         }
     except Exception as e:
         logger.error(f"Failed to get confidence scores: {e}")
-        return {'error': str(e)}
+        return {"error": str(e)}

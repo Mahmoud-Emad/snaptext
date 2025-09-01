@@ -1,0 +1,260 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main, development ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-lint-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: |
+        poetry install --no-interaction --no-root
+        poetry add --group dev black flake8 isort mypy
+
+    - name: Install project
+      run: poetry install --no-interaction
+
+    - name: Check code formatting with Black
+      run: |
+        poetry run black --check --diff core/ server/ cli/ tests/
+        if [ $? -ne 0 ]; then
+          echo "❌ Code formatting issues found. Run 'make format' to fix them."
+          exit 1
+        else
+          echo "✅ Code formatting is correct."
+        fi
+
+    - name: Check import sorting with isort
+      run: |
+        poetry run isort --check-only --diff core/ server/ cli/ tests/
+        if [ $? -ne 0 ]; then
+          echo "❌ Import sorting issues found. Run 'make format' to fix them."
+          exit 1
+        else
+          echo "✅ Import sorting is correct."
+        fi
+
+    - name: Lint with flake8
+      run: |
+        poetry run flake8 core/ server/ cli/ tests/ \
+          --max-line-length=88 \
+          --extend-ignore=E203,W503,E501 \
+          --exclude=__pycache__,.venv,.git \
+          --statistics \
+          --count
+        if [ $? -ne 0 ]; then
+          echo "❌ Linting issues found. Please fix the issues above."
+          exit 1
+        else
+          echo "✅ No linting issues found."
+        fi
+
+    - name: Type checking with mypy
+      run: |
+        poetry run mypy core/ server/ cli/ \
+          --ignore-missing-imports \
+          --no-strict-optional \
+          --warn-return-any \
+          --warn-unused-configs \
+          --disallow-untyped-defs || true
+        echo "ℹ️ Type checking completed (warnings only)."
+
+    - name: Check for common security issues
+      run: |
+        # Check for hardcoded secrets
+        echo "🔍 Checking for potential security issues..."
+        
+        # Check for hardcoded passwords/keys
+        if grep -r -i "password\s*=" core/ server/ cli/ --include="*.py" | grep -v "# noqa"; then
+          echo "⚠️ Potential hardcoded passwords found"
+        fi
+        
+        if grep -r -i "api_key\s*=" core/ server/ cli/ --include="*.py" | grep -v "# noqa"; then
+          echo "⚠️ Potential hardcoded API keys found"
+        fi
+        
+        # Check for debug mode in production
+        if grep -r "debug\s*=\s*True" server/ --include="*.py"; then
+          echo "⚠️ Debug mode enabled - ensure this is disabled in production"
+        fi
+        
+        echo "✅ Security check completed."
+
+    - name: Check documentation
+      run: |
+        echo "📚 Checking documentation..."
+        
+        # Check for docstrings in main modules
+        poetry run python -c "
+        import ast
+        import sys
+        
+        def check_docstrings(filename):
+            with open(filename, 'r') as f:
+                tree = ast.parse(f.read())
+            
+            functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+            classes = [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
+            
+            missing_docs = []
+            for func in functions:
+                if not func.name.startswith('_') and not ast.get_docstring(func):
+                    missing_docs.append(f'Function {func.name} (line {func.lineno})')
+            
+            for cls in classes:
+                if not ast.get_docstring(cls):
+                    missing_docs.append(f'Class {cls.name} (line {cls.lineno})')
+            
+            return missing_docs
+        
+        files_to_check = ['core/tool.py', 'server/server.py', 'cli/cli.py']
+        all_missing = []
+        
+        for file in files_to_check:
+            try:
+                missing = check_docstrings(file)
+                if missing:
+                    print(f'Missing docstrings in {file}:')
+                    for item in missing:
+                        print(f'  - {item}')
+                    all_missing.extend(missing)
+            except Exception as e:
+                print(f'Could not check {file}: {e}')
+        
+        if all_missing:
+            print(f'⚠️ Found {len(all_missing)} missing docstrings')
+        else:
+            print('✅ All public functions and classes have docstrings')
+        "
+
+    - name: Check code complexity
+      run: |
+        echo "🔍 Checking code complexity..."
+        poetry add --group dev radon
+        
+        # Check cyclomatic complexity
+        poetry run radon cc core/ server/ cli/ -a -nc
+        
+        # Check maintainability index
+        poetry run radon mi core/ server/ cli/ -nc
+        
+        echo "✅ Complexity check completed."
+
+    - name: Generate lint report
+      if: always()
+      run: |
+        echo "📊 Generating lint summary..."
+        echo "## Lint Results" > lint-report.md
+        echo "" >> lint-report.md
+        
+        # Count Python files
+        PYTHON_FILES=$(find core/ server/ cli/ tests/ -name "*.py" | wc -l)
+        echo "- **Python files analyzed:** $PYTHON_FILES" >> lint-report.md
+        
+        # Run flake8 and count issues
+        FLAKE8_ISSUES=$(poetry run flake8 core/ server/ cli/ tests/ --max-line-length=88 --extend-ignore=E203,W503,E501 --count --exit-zero)
+        echo "- **Flake8 issues:** $FLAKE8_ISSUES" >> lint-report.md
+        
+        # Check formatting
+        BLACK_CHECK=$(poetry run black --check core/ server/ cli/ tests/ 2>&1 | grep "would reformat" | wc -l || echo "0")
+        echo "- **Files needing formatting:** $BLACK_CHECK" >> lint-report.md
+        
+        # Check imports
+        ISORT_CHECK=$(poetry run isort --check-only core/ server/ cli/ tests/ 2>&1 | grep "ERROR" | wc -l || echo "0")
+        echo "- **Import sorting issues:** $ISORT_CHECK" >> lint-report.md
+        
+        echo "" >> lint-report.md
+        echo "### Summary" >> lint-report.md
+        if [ "$FLAKE8_ISSUES" -eq 0 ] && [ "$BLACK_CHECK" -eq 0 ] && [ "$ISORT_CHECK" -eq 0 ]; then
+          echo "✅ **All lint checks passed!**" >> lint-report.md
+        else
+          echo "❌ **Some lint issues found. Please review and fix.**" >> lint-report.md
+        fi
+        
+        cat lint-report.md
+
+    - name: Upload lint report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: lint-report
+        path: lint-report.md
+
+  pre-commit-hooks:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install pre-commit
+      run: |
+        pip install pre-commit
+
+    - name: Create pre-commit config
+      run: |
+        cat > .pre-commit-config.yaml << EOF
+        repos:
+        - repo: https://github.com/psf/black
+          rev: 23.12.1
+          hooks:
+          - id: black
+            language_version: python3.11
+        - repo: https://github.com/pycqa/isort
+          rev: 5.13.2
+          hooks:
+          - id: isort
+        - repo: https://github.com/pycqa/flake8
+          rev: 7.0.0
+          hooks:
+          - id: flake8
+            args: [--max-line-length=88, --extend-ignore=E203,W503]
+        - repo: https://github.com/pre-commit/pre-commit-hooks
+          rev: v4.5.0
+          hooks:
+          - id: trailing-whitespace
+          - id: end-of-file-fixer
+          - id: check-yaml
+          - id: check-added-large-files
+          - id: check-merge-conflict
+        EOF
+
+    - name: Run pre-commit on all files
+      run: |
+        pre-commit run --all-files || true
+        echo "ℹ️ Pre-commit hooks validation completed."

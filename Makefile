@@ -164,7 +164,7 @@ dev:
 # Install development dependencies
 install-dev:
 	@echo "🛠️ Installing development dependencies..."
-	poetry add --group dev black flake8 isort pytest pytest-cov mypy
+	poetry add --group dev black flake8 isort pytest pytest-cov pytest-mock mypy safety bandit radon
 	@echo "✅ Development dependencies installed!"
 
 # Show project info

@@ -1,0 +1,276 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, development ]
+  push:
+    branches: [ main ]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.changes.outputs.python }}
+      docs: ${{ steps.changes.outputs.docs }}
+      workflows: ${{ steps.changes.outputs.workflows }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check for changes
+      uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          python:
+            - '**/*.py'
+            - 'pyproject.toml'
+            - 'poetry.lock'
+          docs:
+            - '**/*.md'
+            - 'docs/**'
+          workflows:
+            - '.github/workflows/**'
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction
+        poetry add --group dev black flake8 isort
+
+    - name: Run Black
+      run: poetry run black --check --diff core/ server/ cli/ tests/
+
+    - name: Run isort
+      run: poetry run isort --check-only --diff core/ server/ cli/ tests/
+
+    - name: Run flake8
+      run: poetry run flake8 core/ server/ cli/ tests/ --max-line-length=88 --extend-ignore=E203,W503,E501
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr libtesseract-dev
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Run tests
+      run: poetry run pytest tests/ -v --tb=short
+
+    - name: Generate coverage (Python 3.11 only)
+      if: matrix.python-version == '3.11'
+      run: poetry run pytest tests/ --cov=core --cov=server --cov=cli --cov-report=xml
+
+    - name: Upload coverage
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+
+  integration:
+    needs: [lint, test]
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr libtesseract-dev
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Test CLI integration
+      run: |
+        # Create test image
+        poetry run python -c "
+        from PIL import Image, ImageDraw
+        img = Image.new('RGB', (200, 100), 'white')
+        draw = ImageDraw.Draw(img)
+        draw.text((50, 40), 'TEST OCR', fill='black')
+        img.save('integration_test.png')
+        "
+        
+        # Test CLI
+        poetry run python -m cli.cli integration_test.png --verbose
+        poetry run python -m cli.cli integration_test.png --output test_output.txt
+        [ -f test_output.txt ] && echo "✅ CLI integration test passed"
+
+    - name: Test server integration
+      run: |
+        # Start server in background
+        poetry run python server/server.py &
+        SERVER_PID=$!
+        
+        # Wait for server to start
+        sleep 5
+        
+        # Test server endpoints
+        curl -f http://127.0.0.1:5000/ > /dev/null
+        curl -f http://127.0.0.1:5000/static/style.css > /dev/null
+        curl -f http://127.0.0.1:5000/static/script.js > /dev/null
+        
+        # Stop server
+        kill $SERVER_PID
+        
+        echo "✅ Server integration test passed"
+
+  security:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Run safety check
+      run: |
+        poetry add --group dev safety
+        poetry run safety check --json || true
+
+    - name: Run bandit security scan
+      run: |
+        poetry add --group dev bandit
+        poetry run bandit -r core/ server/ cli/ -f json || true
+
+  docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check markdown links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'yes'
+        config-file: '.github/markdown-link-check-config.json'
+
+    - name: Validate README
+      run: |
+        # Check if README has required sections
+        if ! grep -q "## Installation" README.md; then
+          echo "❌ README missing Installation section"
+          exit 1
+        fi
+        
+        if ! grep -q "## Usage" README.md; then
+          echo "❌ README missing Usage section"
+          exit 1
+        fi
+        
+        echo "✅ README validation passed"
+
+  summary:
+    needs: [lint, test, integration, security, docs]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check all jobs status
+      run: |
+        echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.lint.result }}" = "success" ] || [ "${{ needs.lint.result }}" = "skipped" ]; then
+          echo "✅ **Linting:** Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Linting:** Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.test.result }}" = "success" ] || [ "${{ needs.test.result }}" = "skipped" ]; then
+          echo "✅ **Tests:** Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Tests:** Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.integration.result }}" = "success" ] || [ "${{ needs.integration.result }}" = "skipped" ]; then
+          echo "✅ **Integration:** Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Integration:** Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.security.result }}" = "success" ] || [ "${{ needs.security.result }}" = "skipped" ]; then
+          echo "✅ **Security:** Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Security:** Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.docs.result }}" = "success" ] || [ "${{ needs.docs.result }}" = "skipped" ]; then
+          echo "✅ **Documentation:** Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Documentation:** Failed" >> $GITHUB_STEP_SUMMARY
+        fi

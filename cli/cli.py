@@ -4,9 +4,10 @@ SnapText CLI - Command-line interface for screenshot OCR
 """
 
 import argparse
-import sys
 import os
+import sys
 from pathlib import Path
+
 from core.tool import extract_text, get_text_confidence
 
 
@@ -19,36 +20,26 @@ Examples:
   %(prog)s image.png
   %(prog)s screenshot.jpg --output extracted.txt
   %(prog)s photo.png --verbose
-        """
+        """,
+    )
+
+    parser.add_argument("image_path", help="Path to the image file to process")
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Output file to save extracted text (default: print to stdout)",
     )
 
     parser.add_argument(
-        "image_path",
-        help="Path to the image file to process"
+        "-v", "--verbose", action="store_true", help="Enable verbose output"
     )
 
     parser.add_argument(
-        "-o", "--output",
-        help="Output file to save extracted text (default: print to stdout)"
+        "--confidence", action="store_true", help="Show OCR confidence information"
     )
 
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose output"
-    )
-
-    parser.add_argument(
-        "--confidence",
-        action="store_true",
-        help="Show OCR confidence information"
-    )
-
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="SnapText CLI 1.0.0"
-    )
+    parser.add_argument("--version", action="version", version="SnapText CLI 1.0.0")
 
     args = parser.parse_args()
 
@@ -75,12 +66,12 @@ Examples:
         # Get confidence information if requested
         if args.confidence or args.verbose:
             confidence_info = get_text_confidence(args.image_path)
-            if not confidence_info.get('error'):
-                avg_conf = confidence_info.get('average_confidence', 0)
-                word_count = confidence_info.get('word_count', 0)
-                low_conf_words = confidence_info.get('low_confidence_words', 0)
+            if not confidence_info.get("error"):
+                avg_conf = confidence_info.get("average_confidence", 0)
+                word_count = confidence_info.get("word_count", 0)
+                low_conf_words = confidence_info.get("low_confidence_words", 0)
 
-                print(f"\n📊 OCR Quality Information:")
+                print("\n📊 OCR Quality Information:")
                 print(f"   Average confidence: {avg_conf:.1f}%")
                 print(f"   Words detected: {word_count}")
                 if low_conf_words > 0:
@@ -88,18 +79,18 @@ Examples:
 
                 # Quality assessment
                 if avg_conf >= 80:
-                    print(f"   Quality: ✅ High")
+                    print("   Quality: ✅ High")
                 elif avg_conf >= 60:
-                    print(f"   Quality: ⚠️ Medium")
+                    print("   Quality: ⚠️ Medium")
                 else:
-                    print(f"   Quality: ❌ Low - Consider improving image quality")
+                    print("   Quality: ❌ Low - Consider improving image quality")
 
         # Output results
         if args.output:
             # Save to file
             output_path = Path(args.output)
             try:
-                with open(output_path, 'w', encoding='utf-8') as f:
+                with open(output_path, "w", encoding="utf-8") as f:
                     f.write(text)
                 if args.verbose:
                     print(f"\n💾 Text saved to: {output_path}")

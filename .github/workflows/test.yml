@@ -1,0 +1,222 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main, development ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+        exclude:
+          # Reduce matrix size for faster CI
+          - os: macos-latest
+            python-version: "3.12"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr libtesseract-dev
+
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install tesseract
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Install project
+      run: poetry install --no-interaction
+
+    - name: Check dependencies
+      run: |
+        poetry run python --version
+        poetry run python -c "import pytesseract; print('Tesseract version:', pytesseract.get_tesseract_version())"
+        poetry run python -c "import cv2; print('OpenCV version:', cv2.__version__)"
+
+    - name: Run unit tests
+      run: poetry run pytest tests/ -v -m "not slow and not integration" --tb=short
+
+    - name: Run integration tests
+      run: poetry run pytest tests/ -v -m "integration" --tb=short
+
+    - name: Run performance tests (Ubuntu only)
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: poetry run pytest tests/ -v -m "slow" --tb=short
+
+    - name: Generate coverage report
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        poetry run pytest tests/ --cov=core --cov=server --cov=cli --cov-report=xml --cov-report=term
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  test-cli:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr libtesseract-dev
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Test CLI functionality
+      run: |
+        # Test CLI help
+        poetry run python -m cli.cli --help
+        
+        # Test CLI version
+        poetry run python -m cli.cli --version
+        
+        # Create a simple test image and test OCR
+        poetry run python -c "
+        from PIL import Image, ImageDraw, ImageFont
+        import os
+        img = Image.new('RGB', (200, 100), 'white')
+        draw = ImageDraw.Draw(img)
+        try:
+            font = ImageFont.load_default()
+            draw.text((50, 40), 'HELLO WORLD', fill='black', font=font)
+        except:
+            draw.text((50, 40), 'HELLO WORLD', fill='black')
+        img.save('test_cli.png')
+        "
+        
+        # Test OCR with the created image
+        poetry run python -m cli.cli test_cli.png --verbose --confidence
+        
+        # Test output to file
+        poetry run python -m cli.cli test_cli.png --output test_output.txt
+        cat test_output.txt
+
+  test-server:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr libtesseract-dev
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Test server startup
+      run: |
+        # Start server in background
+        poetry run python server/server.py &
+        SERVER_PID=$!
+        
+        # Wait for server to start
+        sleep 5
+        
+        # Test server endpoints
+        curl -f http://127.0.0.1:5000/ || exit 1
+        curl -f http://127.0.0.1:5000/static/style.css || exit 1
+        curl -f http://127.0.0.1:5000/static/script.js || exit 1
+        
+        # Stop server
+        kill $SERVER_PID
+        
+        echo "Server tests passed!"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Run safety check
+      run: |
+        poetry add --group dev safety
+        poetry run safety check
+
+    - name: Run bandit security scan
+      run: |
+        poetry add --group dev bandit
+        poetry run bandit -r core/ server/ cli/ -f json -o bandit-report.json || true
+        poetry run bandit -r core/ server/ cli/
