@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "snaptext"
+version = "0.1.0"
+description = "Simple OCR tool to extract text from images."
+authors = ["Your Name <you@example.com>"]
+packages = [{ include = "core" }, { include = "cli" }, { include = "server" }]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "^3.0"
+pytesseract = "^0.3.10"
+pillow = "^10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

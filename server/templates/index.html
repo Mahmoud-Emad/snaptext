@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapText - Screenshot OCR Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&family=Google+Sans+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">📸</div>
+                <span>SnapText</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h1>Extract text from images</h1>
+            <p class="subtitle">Upload a screenshot or image to extract text using OCR technology</p>
+        </div>
+
+        <div class="content-grid">
+            <!-- Upload Section -->
+            <div class="container upload-container">
+                <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px; color: #202124;">Upload Image</h2>
+
+                <div class="upload-section">
+                    <form id="uploadForm">
+                        <div class="drag-drop-area" id="dragDropArea">
+                            <div class="drag-icon">📁</div>
+                            <p><strong>Drag an image here</strong></p>
+                            <p style="margin: 8px 0; color: #9aa0a6;">or</p>
+                            <div class="file-input-wrapper">
+                                <input type="file" name="file" id="fileInput" accept="image/*" class="file-input">
+                                <label for="fileInput" class="file-input-label">
+                                    <span class="material-icon">upload</span>
+                                    Choose file
+                                </label>
+                            </div>
+                        </div>
+                        <div class="file-name" id="fileName"></div>
+                        <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                            <span class="material-icon">text_fields</span>
+                            Extract text
+                        </button>
+                    </form>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Processing your image...</div>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="container output-container">
+                <div class="output-header">
+                    <div class="output-title">Extracted Text</div>
+                    <button class="copy-btn" id="copyBtn" style="display: none;">
+                        <span class="material-icon">content_copy</span>
+                        Copy
+                    </button>
+                </div>
+
+                <div class="output-content">
+                    <div class="output-placeholder" id="outputPlaceholder">
+                        <div class="output-placeholder-icon">📄</div>
+                        <p><strong>No text extracted yet</strong></p>
+                        <p style="font-size: 14px; margin-top: 8px;">Upload an image to see extracted text here</p>
+                    </div>
+
+                    <pre id="output" style="display: none;"></pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
