@@ -68,24 +68,32 @@ jobs:
     - name: Validate action versions
       run: |
         echo "🔍 Checking for deprecated action versions..."
-        
-        # Check for deprecated actions/upload-artifact@v3
-        if grep -r "actions/upload-artifact@v3" .github/workflows/; then
-          echo "❌ Found deprecated actions/upload-artifact@v3"
+
+        # Check for deprecated actions (excluding this validation file)
+        DEPRECATED_UPLOAD_V3=$(find .github/workflows -name "*.yml" -not -name "validate.yml" -exec grep -l "actions/upload-artifact@v3" {} \;)
+        if [ -n "$DEPRECATED_UPLOAD_V3" ]; then
+          echo "❌ Found deprecated actions/upload-artifact@v3 in:"
+          echo "$DEPRECATED_UPLOAD_V3"
           echo "Please update to actions/upload-artifact@v4"
           exit 1
         fi
-        
+
         # Check for deprecated actions/cache@v3
-        if grep -r "actions/cache@v3" .github/workflows/; then
-          echo "⚠️ Found actions/cache@v3, consider updating to v4"
+        DEPRECATED_CACHE_V3=$(find .github/workflows -name "*.yml" -not -name "validate.yml" -exec grep -l "actions/cache@v3" {} \;)
+        if [ -n "$DEPRECATED_CACHE_V3" ]; then
+          echo "⚠️ Found actions/cache@v3 in:"
+          echo "$DEPRECATED_CACHE_V3"
+          echo "Consider updating to v4"
         fi
-        
+
         # Check for deprecated actions/setup-python@v4
-        if grep -r "actions/setup-python@v4" .github/workflows/; then
-          echo "ℹ️ Found actions/setup-python@v4, consider updating to v5"
+        DEPRECATED_PYTHON_V4=$(find .github/workflows -name "*.yml" -not -name "validate.yml" -exec grep -l "actions/setup-python@v4" {} \;)
+        if [ -n "$DEPRECATED_PYTHON_V4" ]; then
+          echo "ℹ️ Found actions/setup-python@v4 in:"
+          echo "$DEPRECATED_PYTHON_V4"
+          echo "Consider updating to v5"
         fi
-        
+
         echo "✅ No deprecated action versions found!"
 
     - name: Check workflow triggers
