@@ -1,8 +1,8 @@
 # SnapText
 
-[![Tests](https://github.com/yourusername/snaptext/workflows/Tests/badge.svg)](https://github.com/yourusername/snaptext/actions/workflows/test.yml)
-[![Lint](https://github.com/yourusername/snaptext/workflows/Lint/badge.svg)](https://github.com/yourusername/snaptext/actions/workflows/lint.yml)
-[![CI](https://github.com/yourusername/snaptext/workflows/CI/badge.svg)](https://github.com/yourusername/snaptext/actions/workflows/ci.yml)
+[![Tests](https://github.com/Mahmoud-Emad/snaptext/workflows/Tests/badge.svg)](https://github.com/Mahmoud-Emad/snaptext/actions/workflows/test.yml)
+[![Lint](https://github.com/Mahmoud-Emad/snaptext/workflows/Lint/badge.svg)](https://github.com/Mahmoud-Emad/snaptext/actions/workflows/lint.yml)
+[![CI](https://github.com/Mahmoud-Emad/snaptext/workflows/CI/badge.svg)](https://github.com/Mahmoud-Emad/snaptext/actions/workflows/ci.yml)
 
 A powerful OCR tool to extract text from images with enhanced accuracy and modern UI.
 
