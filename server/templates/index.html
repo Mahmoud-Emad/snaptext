@@ -55,6 +55,22 @@
                     </form>
                 </div>
 
+                <!-- Image Preview Section -->
+                <div class="image-preview-section" id="imagePreviewSection" style="display: none;">
+                    <div class="preview-header">
+                        <h3 style="font-size: 16px; font-weight: 500; color: #202124; margin-bottom: 12px;">Image
+                            Preview</h3>
+                        <button class="remove-image-btn" id="removeImageBtn" type="button">
+                            <span class="material-icon">close</span>
+                            Remove
+                        </button>
+                    </div>
+                    <div class="image-preview-container">
+                        <img id="imagePreview" alt="Selected image preview" />
+                        <div class="image-info" id="imageInfo"></div>
+                    </div>
+                </div>
+
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <div class="loading-text">Processing your image...</div>

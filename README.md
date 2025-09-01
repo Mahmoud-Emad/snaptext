@@ -1,41 +1,114 @@
 # SnapText
 
-A simple Python tool to extract text from screenshots using Tesseract OCR.  
-Includes a small web GUI for uploading images.
+A powerful OCR tool to extract text from images with enhanced accuracy and modern UI.
 
 ## Features
 
-- Upload a screenshot and extract text instantly
-- CLI support
-- Lightweight web server with static frontend
-- Cross-platform installation script (`install.sh`)
+- **Enhanced OCR Accuracy**: Multiple preprocessing techniques for better text recognition
+- **Modern Web Interface**: Google Material Design-inspired UI with image preview
+- **Command Line Interface**: Full-featured CLI with confidence scoring
+- **Image Preview**: See your uploaded images before processing
+- **OCR Quality Metrics**: Real-time confidence scores and quality assessment
+- **Copy to Clipboard**: One-click text copying
+- **Responsive Design**: Works on desktop and mobile devices
+- **Cross-platform**: Supports Linux, macOS, and Windows
+
+## OCR Improvements
+
+SnapText uses advanced image preprocessing techniques to improve text extraction accuracy:
+
+- **Multiple OCR Methods**: Tries different approaches and selects the best result
+- **Image Enhancement**: Contrast, sharpness, and noise reduction
+- **Adaptive Thresholding**: Handles varying lighting conditions
+- **Scale Optimization**: Automatically scales images for better recognition
+- **Confidence Scoring**: Provides quality metrics for extracted text
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.11+
 - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
+- OpenCV (automatically installed)
+- NumPy (automatically installed)
 
-## Installation
+## Quick Start
 
 ```bash
 git clone https://github.com/yourname/snaptext.git
 cd snaptext
-./install.sh
+make install    # Installs Python, Poetry, Tesseract, and dependencies
+make runserver  # Start the web interface
+```
+
+## Installation
+
+### Automatic Installation (Recommended)
+
+```bash
+make install
+```
+
+This will automatically install:
+
+- Python 3.11+ (if not present)
+- Poetry (if not present)
+- Tesseract OCR
+- All project dependencies
+
+### Manual Installation
+
+```bash
+# Install Tesseract OCR first
+# On macOS: brew install tesseract
+# On Ubuntu: sudo apt-get install tesseract-ocr
+
+# Install project dependencies
 poetry install
-````
+```
 
 ## Usage
 
-### Start Web Server
+### Web Interface
 
 ```bash
+make runserver
+# or
 poetry run python server/server.py
 ```
 
-Open [http://localhost:5000](http://localhost:5000) in your browser.
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
 
-### CLI
+Features:
+
+- Drag and drop image upload
+- Image preview with metadata
+- Real-time OCR quality assessment
+- One-click text copying
+- Responsive design
+
+### Command Line Interface
 
 ```bash
-poetry run python cli/cli.py path/to/image.png
+# Basic usage
+make runcli -- image.png
+
+# With confidence information
+make runcli -- image.png --confidence
+
+# Save to file with verbose output
+make runcli -- image.png --output extracted.txt --verbose
+
+# Direct poetry commands
+poetry run python cli/cli.py image.png --help
+```
+
+### Available Make Commands
+
+```bash
+make help        # Show all available commands
+make install     # Install all dependencies
+make runserver   # Start web server
+make runcli      # Run CLI tool
+make check-deps  # Check dependency status
+make clean       # Clean temporary files
+make test        # Run tests (when available)
 ```

@@ -1,7 +1,7 @@
 import os
 import logging
-from flask import Flask, request, render_template, send_from_directory
-from core.tool import extract_text
+from flask import Flask, request, render_template, send_from_directory, jsonify
+from core.tool import extract_text, get_text_confidence
 
 # Configure logging
 logging.basicConfig(
@@ -40,9 +40,17 @@ def upload():
 
     try:
         text = extract_text(upload_path)
+        confidence_info = get_text_confidence(upload_path)
         logger.info(f"Text extraction successful for {file.filename}")
+        logger.info(f"OCR confidence: {confidence_info}")
+
         os.remove(upload_path)
-        return {"text": text}
+
+        return {
+            "text": text,
+            "confidence": confidence_info,
+            "filename": file.filename
+        }
     except Exception as e:
         logger.error(f"Error extracting text from {file.filename}: {str(e)}")
         if os.path.exists(upload_path):
