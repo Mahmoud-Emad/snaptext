@@ -21,8 +21,11 @@ def test_data_dir():
 def sample_images(test_data_dir):
     """Return paths to sample test images."""
     images = {}
-    for img_file in test_data_dir.glob("*.{jpg,jpeg,png,gif,bmp}"):
-        images[img_file.stem] = str(img_file)
+    # Check for common image extensions
+    extensions = ['*.jpg', '*.jpeg', '*.png', '*.gif', '*.bmp', '*.JPG', '*.JPEG', '*.PNG']
+    for pattern in extensions:
+        for img_file in test_data_dir.glob(pattern):
+            images[img_file.stem] = str(img_file)
     return images
 
 
