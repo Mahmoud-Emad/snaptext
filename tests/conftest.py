@@ -2,12 +2,10 @@
 Pytest configuration and shared fixtures for SnapText tests.
 """
 
-import os
 import shutil
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pytest
 from PIL import Image, ImageDraw, ImageFont
 
@@ -65,7 +63,7 @@ def create_test_image():
         except (OSError, IOError):
             try:
                 font = ImageFont.load_default()
-            except:
+            except (OSError, IOError):
                 font = None
 
         # Calculate text position (center)

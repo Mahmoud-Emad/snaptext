@@ -4,7 +4,6 @@ Performance tests for SnapText OCR functionality.
 
 import os
 import time
-from unittest.mock import patch
 
 import pytest
 
@@ -53,7 +52,7 @@ class TestPerformance:
             start_time = time.time()
 
             try:
-                confidence = get_text_confidence(image_path)
+                get_text_confidence(image_path)
                 end_time = time.time()
 
                 processing_time = end_time - start_time
@@ -116,7 +115,7 @@ class TestPerformance:
         start_time = time.time()
 
         try:
-            result = extract_text(img_path)
+            extract_text(img_path)
             end_time = time.time()
 
             processing_time = end_time - start_time

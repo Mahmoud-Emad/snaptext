@@ -23,7 +23,7 @@ command_exists() {
 # Function to install Python on different platforms
 install_python() {
     echo "🐍 Installing Python..."
-    
+
     if [ "$PLATFORM" = "Linux" ]; then
         if command_exists apt-get; then
             sudo apt-get update
@@ -57,17 +57,17 @@ install_python() {
 # Function to install Poetry
 install_poetry() {
     echo "📝 Installing Poetry..."
-    
+
     if [ "$PLATFORM" = "Windows" ]; then
         echo "⚠️ Please install Poetry manually on Windows:"
         echo "    https://python-poetry.org/docs/#installation"
         exit 1
     else
         curl -sSL https://install.python-poetry.org | python3 -
-        
+
         # Add Poetry to PATH for current session
         export PATH="$HOME/.local/bin:$PATH"
-        
+
         # Add Poetry to shell profile
         if [ -f "$HOME/.bashrc" ]; then
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
@@ -75,7 +75,7 @@ install_poetry() {
         if [ -f "$HOME/.zshrc" ]; then
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
         fi
-        
+
         echo "✅ Poetry installed. You may need to restart your terminal or run:"
         echo "    export PATH=\"\$HOME/.local/bin:\$PATH\""
     fi
@@ -88,7 +88,7 @@ if ! command_exists python3; then
 else
     PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
     REQUIRED_VERSION="3.8"
-    
+
     if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$PYTHON_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]; then
         echo "❌ Python $PYTHON_VERSION found, but Python $REQUIRED_VERSION+ is required."
         install_python

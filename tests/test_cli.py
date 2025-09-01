@@ -5,7 +5,6 @@ Tests for the CLI interface in cli/cli.py
 import os
 import subprocess
 import sys
-import tempfile
 
 import pytest
 

@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Check for changes
       uses: dorny/paths-filter@v2
       id: changes
@@ -73,7 +73,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -149,7 +149,7 @@ jobs:
         draw.text((50, 40), 'TEST OCR', fill='black')
         img.save('integration_test.png')
         "
-        
+
         # Test CLI
         poetry run python -m cli.cli integration_test.png --verbose
         poetry run python -m cli.cli integration_test.png --output test_output.txt
@@ -160,18 +160,18 @@ jobs:
         # Start server in background
         poetry run python server/server.py &
         SERVER_PID=$!
-        
+
         # Wait for server to start
         sleep 5
-        
+
         # Test server endpoints
         curl -f http://127.0.0.1:5000/ > /dev/null
         curl -f http://127.0.0.1:5000/static/style.css > /dev/null
         curl -f http://127.0.0.1:5000/static/script.js > /dev/null
-        
+
         # Stop server
         kill $SERVER_PID
-        
+
         echo "✅ Server integration test passed"
 
   security:
@@ -227,12 +227,12 @@ jobs:
           echo "❌ README missing Installation section"
           exit 1
         fi
-        
+
         if ! grep -q "## Usage" README.md; then
           echo "❌ README missing Usage section"
           exit 1
         fi
-        
+
         echo "✅ README validation passed"
 
   summary:
@@ -244,31 +244,31 @@ jobs:
       run: |
         echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ "${{ needs.lint.result }}" = "success" ] || [ "${{ needs.lint.result }}" = "skipped" ]; then
           echo "✅ **Linting:** Passed" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Linting:** Failed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ needs.test.result }}" = "success" ] || [ "${{ needs.test.result }}" = "skipped" ]; then
           echo "✅ **Tests:** Passed" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Tests:** Failed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ needs.integration.result }}" = "success" ] || [ "${{ needs.integration.result }}" = "skipped" ]; then
           echo "✅ **Integration:** Passed" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Integration:** Failed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ needs.security.result }}" = "success" ] || [ "${{ needs.security.result }}" = "skipped" ]; then
           echo "✅ **Security:** Passed" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Security:** Failed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ needs.docs.result }}" = "success" ] || [ "${{ needs.docs.result }}" = "skipped" ]; then
           echo "✅ **Documentation:** Passed" >> $GITHUB_STEP_SUMMARY
         else

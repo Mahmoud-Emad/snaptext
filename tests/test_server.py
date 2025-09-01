@@ -4,11 +4,7 @@ Tests for the Flask web server in server/server.py
 
 import io
 import json
-import os
-from unittest.mock import MagicMock, patch
-
-import pytest
-from PIL import Image
+from unittest.mock import patch
 
 
 class TestServerRoutes:

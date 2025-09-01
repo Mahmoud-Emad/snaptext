@@ -94,53 +94,53 @@ jobs:
       run: |
         # Check for hardcoded secrets
         echo "🔍 Checking for potential security issues..."
-        
+
         # Check for hardcoded passwords/keys
         if grep -r -i "password\s*=" core/ server/ cli/ --include="*.py" | grep -v "# noqa"; then
           echo "⚠️ Potential hardcoded passwords found"
         fi
-        
+
         if grep -r -i "api_key\s*=" core/ server/ cli/ --include="*.py" | grep -v "# noqa"; then
           echo "⚠️ Potential hardcoded API keys found"
         fi
-        
+
         # Check for debug mode in production
         if grep -r "debug\s*=\s*True" server/ --include="*.py"; then
           echo "⚠️ Debug mode enabled - ensure this is disabled in production"
         fi
-        
+
         echo "✅ Security check completed."
 
     - name: Check documentation
       run: |
         echo "📚 Checking documentation..."
-        
+
         # Check for docstrings in main modules
         poetry run python -c "
         import ast
         import sys
-        
+
         def check_docstrings(filename):
             with open(filename, 'r') as f:
                 tree = ast.parse(f.read())
-            
+
             functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
             classes = [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
-            
+
             missing_docs = []
             for func in functions:
                 if not func.name.startswith('_') and not ast.get_docstring(func):
                     missing_docs.append(f'Function {func.name} (line {func.lineno})')
-            
+
             for cls in classes:
                 if not ast.get_docstring(cls):
                     missing_docs.append(f'Class {cls.name} (line {cls.lineno})')
-            
+
             return missing_docs
-        
+
         files_to_check = ['core/tool.py', 'server/server.py', 'cli/cli.py']
         all_missing = []
-        
+
         for file in files_to_check:
             try:
                 missing = check_docstrings(file)
@@ -151,7 +151,7 @@ jobs:
                     all_missing.extend(missing)
             except Exception as e:
                 print(f'Could not check {file}: {e}')
-        
+
         if all_missing:
             print(f'⚠️ Found {len(all_missing)} missing docstrings')
         else:
@@ -162,13 +162,13 @@ jobs:
       run: |
         echo "🔍 Checking code complexity..."
         poetry add --group dev radon
-        
+
         # Check cyclomatic complexity
         poetry run radon cc core/ server/ cli/ -a -nc
-        
+
         # Check maintainability index
         poetry run radon mi core/ server/ cli/ -nc
-        
+
         echo "✅ Complexity check completed."
 
     - name: Generate lint report
@@ -177,23 +177,23 @@ jobs:
         echo "📊 Generating lint summary..."
         echo "## Lint Results" > lint-report.md
         echo "" >> lint-report.md
-        
+
         # Count Python files
         PYTHON_FILES=$(find core/ server/ cli/ tests/ -name "*.py" | wc -l)
         echo "- **Python files analyzed:** $PYTHON_FILES" >> lint-report.md
-        
+
         # Run flake8 and count issues
         FLAKE8_ISSUES=$(poetry run flake8 core/ server/ cli/ tests/ --max-line-length=88 --extend-ignore=E203,W503,E501 --count --exit-zero)
         echo "- **Flake8 issues:** $FLAKE8_ISSUES" >> lint-report.md
-        
+
         # Check formatting
         BLACK_CHECK=$(poetry run black --check core/ server/ cli/ tests/ 2>&1 | grep "would reformat" | wc -l || echo "0")
         echo "- **Files needing formatting:** $BLACK_CHECK" >> lint-report.md
-        
+
         # Check imports
         ISORT_CHECK=$(poetry run isort --check-only core/ server/ cli/ tests/ 2>&1 | grep "ERROR" | wc -l || echo "0")
         echo "- **Import sorting issues:** $ISORT_CHECK" >> lint-report.md
-        
+
         echo "" >> lint-report.md
         echo "### Summary" >> lint-report.md
         if [ "$FLAKE8_ISSUES" -eq 0 ] && [ "$BLACK_CHECK" -eq 0 ] && [ "$ISORT_CHECK" -eq 0 ]; then
@@ -201,7 +201,7 @@ jobs:
         else
           echo "❌ **Some lint issues found. Please review and fix.**" >> lint-report.md
         fi
-        
+
         cat lint-report.md
 
     - name: Upload lint report

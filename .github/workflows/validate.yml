@@ -18,21 +18,21 @@ jobs:
     - name: Validate workflow syntax
       run: |
         echo "🔍 Validating GitHub Actions workflow syntax..."
-        
+
         # Check if workflows directory exists
         if [ ! -d ".github/workflows" ]; then
           echo "❌ .github/workflows directory not found"
           exit 1
         fi
-        
+
         # Count workflow files
         WORKFLOW_COUNT=$(find .github/workflows -name "*.yml" -o -name "*.yaml" | wc -l)
         echo "📁 Found $WORKFLOW_COUNT workflow files"
-        
+
         # List all workflow files
         echo "📋 Workflow files:"
         find .github/workflows -name "*.yml" -o -name "*.yaml" | sort
-        
+
         # Basic YAML syntax validation
         echo ""
         echo "✅ Basic YAML syntax validation:"
@@ -42,17 +42,17 @@ jobs:
             python -c "import yaml; yaml.safe_load(open('$file'))" || exit 1
           fi
         done
-        
+
         echo ""
         echo "🎉 All workflow files have valid YAML syntax!"
 
     - name: Check workflow completeness
       run: |
         echo "🔍 Checking workflow completeness..."
-        
+
         # Check for required workflows
         REQUIRED_WORKFLOWS=("test.yml" "lint.yml" "ci.yml")
-        
+
         for workflow in "${REQUIRED_WORKFLOWS[@]}"; do
           if [ -f ".github/workflows/$workflow" ]; then
             echo "✅ Found required workflow: $workflow"
@@ -61,7 +61,7 @@ jobs:
             exit 1
           fi
         done
-        
+
         echo ""
         echo "🎉 All required workflows are present!"
 
@@ -99,19 +99,19 @@ jobs:
     - name: Check workflow triggers
       run: |
         echo "🔍 Validating workflow triggers..."
-        
+
         # Check that main workflows have proper triggers
         for workflow in test.yml lint.yml ci.yml; do
           if [ -f ".github/workflows/$workflow" ]; then
             echo "Checking triggers for $workflow:"
-            
+
             # Check for push trigger
             if grep -q "push:" ".github/workflows/$workflow"; then
               echo "  ✅ Has push trigger"
             else
               echo "  ⚠️ Missing push trigger"
             fi
-            
+
             # Check for pull_request trigger
             if grep -q "pull_request:" ".github/workflows/$workflow"; then
               echo "  ✅ Has pull_request trigger"
@@ -120,7 +120,7 @@ jobs:
             fi
           fi
         done
-        
+
         echo ""
         echo "🎉 Workflow trigger validation complete!"
 

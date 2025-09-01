@@ -12,6 +12,7 @@ pytesseract = "^0.3.10"
 pillow = "^10.0"
 opencv-python = ">=4.8.0,<4.12"
 numpy = ">=1.24.0,<2.0"
+pre-commit = "^4.3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"

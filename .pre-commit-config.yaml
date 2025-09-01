@@ -18,7 +18,7 @@ repos:
   rev: 24.10.0
   hooks:
   - id: black
-    language_version: python3.11
+    language_version: python3
     args: [--line-length=88]
 
 - repo: https://github.com/pycqa/isort
@@ -64,7 +64,7 @@ repos:
     language: system
     pass_filenames: false
     always_run: true
-    stages: [commit]
+    stages: [pre-commit]
 
   - id: safety-check
     name: safety-check
@@ -72,7 +72,7 @@ repos:
     language: system
     pass_filenames: false
     always_run: true
-    stages: [push]
+    stages: [pre-push]
 
 ci:
   autofix_commit_msg: |

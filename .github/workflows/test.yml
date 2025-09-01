@@ -120,10 +120,10 @@ jobs:
       run: |
         # Test CLI help
         poetry run python -m cli.cli --help
-        
+
         # Test CLI version
         poetry run python -m cli.cli --version
-        
+
         # Create a simple test image and test OCR
         poetry run python -c "
         from PIL import Image, ImageDraw, ImageFont
@@ -137,10 +137,10 @@ jobs:
             draw.text((50, 40), 'HELLO WORLD', fill='black')
         img.save('test_cli.png')
         "
-        
+
         # Test OCR with the created image
         poetry run python -m cli.cli test_cli.png --verbose --confidence
-        
+
         # Test output to file
         poetry run python -m cli.cli test_cli.png --output test_output.txt
         cat test_output.txt
@@ -177,18 +177,18 @@ jobs:
         # Start server in background
         poetry run python server/server.py &
         SERVER_PID=$!
-        
+
         # Wait for server to start
         sleep 5
-        
+
         # Test server endpoints
         curl -f http://127.0.0.1:5000/ || exit 1
         curl -f http://127.0.0.1:5000/static/style.css || exit 1
         curl -f http://127.0.0.1:5000/static/script.js || exit 1
-        
+
         # Stop server
         kill $SERVER_PID
-        
+
         echo "Server tests passed!"
 
   security-scan:
