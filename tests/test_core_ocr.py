@@ -10,8 +10,12 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from core.tool import (enhance_image_pil, extract_text, get_text_confidence,
-                       preprocess_image)
+from core.tool import (
+    enhance_image_pil,
+    extract_text,
+    get_text_confidence,
+    preprocess_image,
+)
 
 
 class TestExtractText:
