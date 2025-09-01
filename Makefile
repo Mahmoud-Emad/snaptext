@@ -53,14 +53,43 @@ runcli:
 		poetry run python cli/cli.py --help; \
 	fi
 
-# Run tests (if test framework is added later)
+# Run tests
 test:
-	@echo "🧪 Running tests..."
-	@if [ -d "tests" ]; then \
-		poetry run pytest tests/ -v; \
-	else \
-		echo "No tests directory found. Create tests/ directory and add test files."; \
-	fi
+	@echo "🧪 Running all tests..."
+	poetry run pytest tests/ -v
+
+# Run only unit tests (fast)
+test-unit:
+	@echo "⚡ Running unit tests..."
+	poetry run pytest tests/ -v -m "not slow and not integration"
+
+# Run integration tests
+test-integration:
+	@echo "🔗 Running integration tests..."
+	poetry run pytest tests/ -v -m "integration"
+
+# Run performance tests (slow)
+test-performance:
+	@echo "🏃 Running performance tests..."
+	poetry run pytest tests/ -v -m "slow"
+
+# Run tests with coverage
+test-coverage:
+	@echo "📊 Running tests with coverage..."
+	poetry run pytest tests/ --cov=core --cov=server --cov=cli --cov-report=html --cov-report=term
+
+# Run specific test file
+test-core:
+	@echo "🔍 Testing core OCR functionality..."
+	poetry run pytest tests/test_core_ocr.py -v
+
+test-server:
+	@echo "🌐 Testing server functionality..."
+	poetry run pytest tests/test_server.py -v
+
+test-cli:
+	@echo "💻 Testing CLI functionality..."
+	poetry run pytest tests/test_cli.py -v
 
 # Lint code
 lint:

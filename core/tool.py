@@ -129,7 +129,7 @@ def extract_text(image_path: str) -> str:
         # Choose the best result (longest meaningful text)
         if not results:
             logger.warning("No text extracted by any method")
-            return ""
+            raise Exception("Failed to extract text: All OCR methods failed")
 
         # Select the result with the most characters (usually more accurate)
         best_result = max(results, key=lambda x: len(x[1]))
@@ -162,7 +162,7 @@ def get_text_confidence(image_path: str) -> dict:
         return {
             'average_confidence': avg_confidence,
             'word_count': len([word for word in data['text'] if word.strip()]),
-            'low_confidence_words': len([conf for conf in confidences if conf < 60])
+            'low_confidence_words': len([conf for conf in confidences if conf < 80])
         }
     except Exception as e:
         logger.error(f"Failed to get confidence scores: {e}")

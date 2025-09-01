@@ -110,5 +110,14 @@ make runserver   # Start web server
 make runcli      # Run CLI tool
 make check-deps  # Check dependency status
 make clean       # Clean temporary files
-make test        # Run tests (when available)
+
+# Testing commands
+make test              # Run all tests
+make test-unit         # Run fast unit tests
+make test-integration  # Run integration tests
+make test-performance  # Run performance tests (slow)
+make test-coverage     # Run tests with coverage report
+make test-core         # Test core OCR functionality
+make test-server       # Test Flask server
+make test-cli          # Test CLI interface
 ```
