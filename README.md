@@ -1,5 +1,9 @@
 # SnapText
 
+[![Tests](https://github.com/yourusername/snaptext/workflows/Tests/badge.svg)](https://github.com/yourusername/snaptext/actions/workflows/test.yml)
+[![Lint](https://github.com/yourusername/snaptext/workflows/Lint/badge.svg)](https://github.com/yourusername/snaptext/actions/workflows/lint.yml)
+[![CI](https://github.com/yourusername/snaptext/workflows/CI/badge.svg)](https://github.com/yourusername/snaptext/actions/workflows/ci.yml)
+
 A powerful OCR tool to extract text from images with enhanced accuracy and modern UI.
 
 ## Features
@@ -73,9 +77,14 @@ poetry install
 make runserver
 # or
 poetry run python server/server.py
+
+# For development with debug mode (not recommended for production)
+FLASK_DEBUG=true poetry run python server/server.py
 ```
 
 Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
+
+**Security Note**: Debug mode is disabled by default for security. Only enable it during development by setting the `FLASK_DEBUG=true` environment variable.
 
 Features:
 

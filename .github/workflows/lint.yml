@@ -31,7 +31,7 @@ jobs:
 
     - name: Load cached venv
       id: cached-poetry-dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .venv
         key: venv-lint-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
@@ -206,7 +206,7 @@ jobs:
 
     - name: Upload lint report
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lint-report
         path: lint-report.md
@@ -231,7 +231,7 @@ jobs:
         cat > .pre-commit-config.yaml << EOF
         repos:
         - repo: https://github.com/psf/black
-          rev: 23.12.1
+          rev: 24.10.0
           hooks:
           - id: black
             language_version: python3.11
@@ -240,12 +240,12 @@ jobs:
           hooks:
           - id: isort
         - repo: https://github.com/pycqa/flake8
-          rev: 7.0.0
+          rev: 7.1.1
           hooks:
           - id: flake8
             args: [--max-line-length=88, --extend-ignore=E203,W503]
         - repo: https://github.com/pre-commit/pre-commit-hooks
-          rev: v4.5.0
+          rev: v4.6.0
           hooks:
           - id: trailing-whitespace
           - id: end-of-file-fixer

@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
+  rev: v4.6.0
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
@@ -15,7 +15,7 @@ repos:
   - id: check-docstring-first
 
 - repo: https://github.com/psf/black
-  rev: 23.12.1
+  rev: 24.10.0
   hooks:
   - id: black
     language_version: python3.11
@@ -28,7 +28,7 @@ repos:
     args: [--profile=black, --line-length=88]
 
 - repo: https://github.com/pycqa/flake8
-  rev: 7.0.0
+  rev: 7.1.1
   hooks:
   - id: flake8
     args: [
@@ -38,14 +38,14 @@ repos:
     ]
 
 - repo: https://github.com/pycqa/bandit
-  rev: 1.7.5
+  rev: 1.8.6
   hooks:
   - id: bandit
     args: [-r, core/, server/, cli/]
     exclude: tests/
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.8.0
+  rev: v1.13.0
   hooks:
   - id: mypy
     additional_dependencies: [types-requests]

@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 
 from flask import Flask, render_template, request, send_from_directory
 
@@ -39,8 +40,12 @@ def upload():
         return {"error": "Empty filename"}, 400
 
     logger.info(f"Processing file: {file.filename}")
-    upload_path = os.path.join("/tmp", file.filename)
-    file.save(upload_path)
+    # Use secure temporary directory
+    with tempfile.NamedTemporaryFile(
+        delete=False, suffix=os.path.splitext(file.filename)[1]
+    ) as tmp_file:
+        upload_path = tmp_file.name
+        file.save(upload_path)
 
     try:
         text = extract_text(upload_path)
@@ -61,4 +66,6 @@ def upload():
 if __name__ == "__main__":
     logger.info("Starting SnapText OCR Server...")
     logger.info("Server will be available at http://127.0.0.1:5000")
-    app.run(debug=True, port=5000, host="127.0.0.1")
+    # Use environment variable to control debug mode for security
+    debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
+    app.run(debug=debug_mode, port=5000, host="127.0.0.1")
