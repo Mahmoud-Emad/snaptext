@@ -2,10 +2,12 @@
 Performance tests for SnapText OCR functionality.
 """
 
-import pytest
-import time
 import os
+import time
 from unittest.mock import patch
+
+import pytest
+
 from core.tool import extract_text, get_text_confidence
 
 
@@ -132,8 +134,9 @@ class TestPerformance:
 
     def test_memory_usage_stability(self, create_test_image, temp_dir):
         """Test that memory usage remains stable across multiple operations."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
@@ -200,8 +203,8 @@ class TestIntegrationPerformance:
 
     def test_concurrent_server_requests(self, client, create_test_image):
         """Test server performance with concurrent requests."""
-        import threading
         import io
+        import threading
 
         results = []
 

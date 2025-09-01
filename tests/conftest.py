@@ -2,13 +2,14 @@
 Pytest configuration and shared fixtures for SnapText tests.
 """
 
-import pytest
 import os
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+
 import numpy as np
+import pytest
+from PIL import Image, ImageDraw, ImageFont
 
 
 @pytest.fixture

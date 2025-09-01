@@ -2,11 +2,12 @@
 Tests for the CLI interface in cli/cli.py
 """
 
-import pytest
-import sys
 import os
-import tempfile
 import subprocess
+import sys
+import tempfile
+
+import pytest
 
 
 class TestCLIArguments:

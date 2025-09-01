@@ -2,11 +2,12 @@
 Tests for the Flask web server in server/server.py
 """
 
-import pytest
-import json
 import io
+import json
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from PIL import Image
 
 

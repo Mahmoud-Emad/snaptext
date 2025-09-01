@@ -2,19 +2,16 @@
 Tests for core OCR functionality in core/tool.py
 """
 
-import pytest
 import os
 import tempfile
-from unittest.mock import patch, MagicMock
-from PIL import Image
-import numpy as np
+from unittest.mock import MagicMock, patch
 
-from core.tool import (
-    extract_text,
-    get_text_confidence,
-    preprocess_image,
-    enhance_image_pil,
-)
+import numpy as np
+import pytest
+from PIL import Image
+
+from core.tool import (enhance_image_pil, extract_text, get_text_confidence,
+                       preprocess_image)
 
 
 class TestExtractText:
