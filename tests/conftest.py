@@ -22,7 +22,16 @@ def sample_images(test_data_dir):
     """Return paths to sample test images."""
     images = {}
     # Check for common image extensions
-    extensions = ['*.jpg', '*.jpeg', '*.png', '*.gif', '*.bmp', '*.JPG', '*.JPEG', '*.PNG']
+    extensions = [
+        "*.jpg",
+        "*.jpeg",
+        "*.png",
+        "*.gif",
+        "*.bmp",
+        "*.JPG",
+        "*.JPEG",
+        "*.PNG",
+    ]
     for pattern in extensions:
         for img_file in test_data_dir.glob(pattern):
             images[img_file.stem] = str(img_file)
@@ -40,11 +49,14 @@ def temp_dir():
 @pytest.fixture
 def create_test_image():
     """Factory fixture to create test images with specific text."""
-    def _create_image(text="Test Text", size=(200, 100), bg_color="white", text_color="black"):
+
+    def _create_image(
+        text="Test Text", size=(200, 100), bg_color="white", text_color="black"
+    ):
         """Create a simple test image with text."""
         img = Image.new("RGB", size, bg_color)
         draw = ImageDraw.Draw(img)
-        
+
         # Try to use a default font, fallback to basic if not available
         try:
             # Try to load a better font
@@ -54,7 +66,7 @@ def create_test_image():
                 font = ImageFont.load_default()
             except:
                 font = None
-        
+
         # Calculate text position (center)
         if font:
             bbox = draw.textbbox((0, 0), text, font=font)
@@ -64,13 +76,13 @@ def create_test_image():
             # Rough estimation if no font available
             text_width = len(text) * 10
             text_height = 15
-        
+
         x = (size[0] - text_width) // 2
         y = (size[1] - text_height) // 2
-        
+
         draw.text((x, y), text, fill=text_color, font=font)
         return img
-    
+
     return _create_image
 
 
@@ -84,8 +96,9 @@ def mock_tesseract_response():
 def flask_app():
     """Create a Flask app instance for testing."""
     from server.server import app
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
+
+    app.config["TESTING"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
     return app
 
 
